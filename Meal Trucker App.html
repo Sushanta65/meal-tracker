@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Meal Tracker 2026</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', sans-serif; background: #f5f7fa; padding: 20px; }
+        .auth-container { max-width: 400px; margin: 100px auto; background: white; padding: 40px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+        .auth-container h2 { color: #2c3e50; margin-bottom: 30px; text-align: center; }
+        .auth-form { display: flex; flex-direction: column; gap: 15px; }
+        .auth-form input { padding: 12px; border: 2px solid #bdc3c7; border-radius: 8px; font-size: 1em; }
+        .auth-form button { padding: 12px; background: #2c3e50; color: white; border: none; border-radius: 8px; font-size: 1em; font-weight: 600; cursor: pointer; }
+        .auth-toggle { text-align: center; margin-top: 20px; color: #7f8c8d; }
+        .auth-toggle a { color: #2c3e50; text-decoration: none; font-weight: 600; }
+        .error-msg { background: #f8d7da; color: #721c24; padding: 10px; border-radius: 6px; text-align: center; display: none; }
+        .container { max-width: 1400px; margin: 0 auto; background: white; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); overflow: hidden; display: none; }
+        .header { background: #2c3e50; color: white; padding: 30px; text-align: center; position: relative; }
+        .user-info { position: absolute; top: 20px; right: 20px; display: flex; gap: 15px; }
+        .logout-btn { background: rgba(255,255,255,0.2); color: white; border: 2px solid white; padding: 8px 16px; border-radius: 6px; cursor: pointer; }
+        .controls { display: flex; justify-content: space-between; padding: 20px; background: #ecf0f1; flex-wrap: wrap; gap: 15px; }
+        .btn { padding: 10px 20px; border-radius: 8px; cursor: pointer; font-weight: 600; }
+        .btn-primary { background: #2c3e50; color: white; border: none; }
+        .sync-status { padding: 8px 16px; background: #d4edda; color: #155724; border-radius: 6px; font-size: 0.9em; }
+        .main-content { display: grid; grid-template-columns: 1fr 350px; }
+        .table-container { overflow-x: auto; padding: 20px; border-right: 2px solid #ecf0f1; }
+        table { width: 100%; border-collapse: collapse; }
+        th { background: #34495e; color: white; padding: 15px 10px; text-align: center; border: 1px solid #2c3e50; }
+        td { padding: 12px 10px; text-align: center; border: 1px solid #ecf0f1; }
+        select { width: 100%; padding: 8px; border: 2px solid #bdc3c7; border-radius: 6px; cursor: pointer; font-weight: 600; }
+        select.yes { background: #d4edda; border-color: #28a745; color: #155724; }
+        select.no { background: #f8d7da; border-color: #dc3545; color: #721c24; }
+        input[type="text"], input[type="number"] { width: 100%; padding: 8px; border: 1px solid #bdc3c7; border-radius: 6px; }
+        .summary { padding: 20px; background: #f8f9fa; overflow-y: auto; }
+        .payment-section { background: white; padding: 20px; border-radius: 8px; margin-bottom: 20px; border: 2px solid #3498db; }
+        .payment-input-group input { width: 100%; padding: 12px; border: 2px solid #bdc3c7; border-radius: 6px; font-weight: 600; }
+        .summary-grid { display: flex; flex-direction: column; gap: 15px; }
+        .summary-item { background: white; padding: 15px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); text-align: center; }
+        .summary-value { font-size: 1.8em; font-weight: 700; color: #2c3e50; }
+        .balance-section { background: white; padding: 20px; border-radius: 8px; margin-top: 20px; }
+        .balance-item { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #ecf0f1; }
+        .balance-item.positive { color: #27ae60; }
+        .balance-item.negative { color: #e74c3c; }
+        @media (max-width: 1024px) { .main-content { grid-template-columns: 1fr; } .user-info { position: static; justify-content: center; margin-top: 15px; } }
+    </style>
+</head>
+<body>
+    <div id="authContainer" class="auth-container">
+        <h2>🍽️ Meal Tracker Login</h2>
+        <div id="authError" class="error-msg"></div>
+        <form id="authForm" class="auth-form">
+            <input type="email" id="authEmail" placeholder="Email" required>
+            <input type="password" id="authPassword" placeholder="Password" required>
+            <button type="submit" id="authSubmitBtn">Login</button>
+        </form>
+        <div class="auth-toggle">
+            <span id="authToggleText">Don't have an account?</span>
+            <a href="#" id="authToggleLink">Sign Up</a>
+        </div>
+    </div>
+
+    <div class="container" id="appContainer">
+        <div class="header">
+            <h1>🍽️ Meal Tracker 2026</h1>
+            <p>Cloud Synced Across All Devices</p>
+            <div class="user-info">
+                <span id="userEmail"></span>
+                <button class="logout-btn" onclick="logout()">Logout</button>
+            </div>
+        </div>
+        
+        <div class="controls">
+            <select id="monthSelect">
+                <option value="0">January</option><option value="1">February</option><option value="2">March</option>
+                <option value="3">April</option><option value="4">May</option><option value="5">June</option>
+                <option value="6">July</option><option value="7">August</option><option value="8">September</option>
+                <option value="9">October</option><option value="10">November</option><option value="11">December</option>
+            </select>
+            <div class="sync-status" id="syncStatus">☁️ Synced</div>
+            <button class="btn btn-primary" onclick="window.print()">🖨️ Print</button>
+        </div>
+        
+        <div class="main-content">
+            <div class="table-container">
+                <table><thead><tr><th>Date</th><th>Day</th><th>Lunch</th><th>Dinner</th><th>Total</th><th>Notes</th></tr></thead><tbody id="tableBody"></tbody></table>
+            </div>
+            <div class="summary">
+                <h2>📊 Summary</h2>
+                <div class="payment-section">
+                    <h3>💰 Payment</h3>
+                    <div class="payment-input-group">
+                        <input type="number" id="paidAmount" placeholder="Amount Paid (TK)" min="0">
+                    </div>
+                </div>
+                <div class="summary-grid">
+                    <div class="summary-item"><div>Lunches</div><div class="summary-value" id="totalLunch">0</div></div>
+                    <div class="summary-item"><div>Dinners</div><div class="summary-value" id="totalDinner">0</div></div>
+                    <div class="summary-item"><div>Total Meals</div><div class="summary-value" id="totalMeals">0</div></div>
+                    <div class="summary-item"><div>Bill (75 TK/meal)</div><div class="summary-value" id="totalBill">0 TK</div></div>
+                </div>
+                <div class="balance-section">
+                    <div class="balance-item"><span>Paid:</span><span id="balancePaid">0 TK</span></div>
+                    <div class="balance-item"><span>Bill:</span><span id="balanceBill">0 TK</span></div>
+                    <div class="balance-item" id="balanceDue"><span>Balance:</span><span>0 TK</span></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+        import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
+        import { getFirestore, doc, setDoc, getDoc } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+
+        const app = initializeApp({
+            apiKey: "AIzaSyD02GSPHCbLuljXZDWtr4g2lRbvjxyDFWk",
+            authDomain: "city-shop-ecommerce.firebaseapp.com",
+            projectId: "city-shop-ecommerce",
+            storageBucket: "city-shop-ecommerce.firebasestorage.app",
+            messagingSenderId: "456035702134",
+            appId: "1:456035702134:web:817007d69e14b59ee31657"
+        });
+
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+        let currentUser = null, currentMonth = 0, yearData = {}, isLogin = true;
+        const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+        const days = [31,28,31,30,31,30,31,31,30,31,30,31];
+        const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+
+        onAuthStateChanged(auth, async (user) => {
+            if (user) {
+                currentUser = user;
+                document.getElementById('authContainer').style.display = 'none';
+                document.getElementById('appContainer').style.display = 'block';
+                document.getElementById('userEmail').textContent = user.email;
+                await loadData();
+                generateTable(currentMonth);
+            } else {
+                document.getElementById('authContainer').style.display = 'block';
+                document.getElementById('appContainer').style.display = 'none';
+            }
+        });
+
+        document.getElementById('authForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const email = document.getElementById('authEmail').value;
+            const password = document.getElementById('authPassword').value;
+            const errorDiv = document.getElementById('authError');
+            errorDiv.style.display = 'none';
+            try {
+                if (isLogin) {
+                    await signInWithEmailAndPassword(auth, email, password);
+                } else {
+                    await createUserWithEmailAndPassword(auth, email, password);
+                }
+            } catch (error) {
+                errorDiv.textContent = error.message;
+                errorDiv.style.display = 'block';
+            }
+        });
+
+        document.getElementById('authToggleLink').addEventListener('click', (e) => {
+            e.preventDefault();
+            isLogin = !isLogin;
+            document.getElementById('authSubmitBtn').textContent = isLogin ? 'Login' : 'Sign Up';
+            document.getElementById('authToggleText').textContent = isLogin ? "Don't have an account?" : 'Already have an account?';
+            document.getElementById('authToggleLink').textContent = isLogin ? 'Sign Up' : 'Login';
+        });
+
+        window.logout = () => signOut(auth);
+
+        async function loadData() {
+            try {
+                const docSnap = await getDoc(doc(db, 'mealTrackers', currentUser.uid));
+                yearData = docSnap.exists() ? docSnap.data().yearData || {} : {};
+            } catch (e) { console.error(e); }
+        }
+
+        async function saveData() {
+            try {
+                await setDoc(doc(db, 'mealTrackers', currentUser.uid), { yearData }, { merge: true });
+            } catch (e) { console.error(e); }
+        }
+
+        function generateTable(m) {
+            const tbody = document.getElementById('tableBody');
+            tbody.innerHTML = '';
+            const mk = `${m}`;
+            if (!yearData[mk]) yearData[mk] = { days: {}, paidAmount: 0 };
+            if (!yearData[mk].days) yearData[mk].days = {};
+
+            for (let d = 1; d <= days[m]; d++) {
+                const dk = `${d}`;
+                if (!yearData[mk].days[dk]) yearData[mk].days[dk] = { lunch: 'No', dinner: 'No', notes: '' };
+                const row = tbody.insertRow();
+                row.insertCell(0).textContent = `${d} ${monthNames[m]}`;
+                row.insertCell(1).textContent = dayNames[new Date(2026, m, d).getDay()];
+
+                const lunchSel = document.createElement('select');
+                lunchSel.innerHTML = '<option value="No">No</option><option value="Yes">Yes</option>';
+                lunchSel.value = yearData[mk].days[dk].lunch;
+                lunchSel.className = lunchSel.value === 'Yes' ? 'yes' : 'no';
+                lunchSel.onchange = () => {
+                    yearData[mk].days[dk].lunch = lunchSel.value;
+                    lunchSel.className = lunchSel.value === 'Yes' ? 'yes' : 'no';
+                    updateTotals();
+                    saveData();
+                };
+                row.insertCell(2).appendChild(lunchSel);
+
+                const dinnerSel = document.createElement('select');
+                dinnerSel.innerHTML = '<option value="No">No</option><option value="Yes">Yes</option>';
+                dinnerSel.value = yearData[mk].days[dk].dinner;
+                dinnerSel.className = dinnerSel.value === 'Yes' ? 'yes' : 'no';
+                dinnerSel.onchange = () => {
+                    yearData[mk].days[dk].dinner = dinnerSel.value;
+                    dinnerSel.className = dinnerSel.value === 'Yes' ? 'yes' : 'no';
+                    updateTotals();
+                    saveData();
+                };
+                row.insertCell(3).appendChild(dinnerSel);
+
+                row.insertCell(4);
+
+                const notesInp = document.createElement('input');
+                notesInp.type = 'text';
+                notesInp.value = yearData[mk].days[dk].notes;
+                notesInp.onchange = () => {
+                    yearData[mk].days[dk].notes = notesInp.value;
+                    saveData();
+                };
+                row.insertCell(5).appendChild(notesInp);
+            }
+
+            document.getElementById('paidAmount').value = yearData[mk].paidAmount || 0;
+            updateTotals();
+        }
+
+        function updateTotals() {
+            const tbody = document.getElementById('tableBody');
+            const mk = `${currentMonth}`;
+            let tl = 0, td = 0, tm = 0;
+
+            for (let i = 0; i < tbody.rows.length; i++) {
+                const dk = `${i + 1}`;
+                const l = yearData[mk].days[dk].lunch === 'Yes' ? 1 : 0;
+                const d = yearData[mk].days[dk].dinner === 'Yes' ? 1 : 0;
+                const daily = l + d;
+                tbody.rows[i].cells[4].textContent = daily;
+                tl += l; td += d; tm += daily;
+            }
+
+            const bill = tm * 75;
+            const paid = yearData[mk].paidAmount || 0;
+            const bal = paid - bill;
+
+            document.getElementById('totalLunch').textContent = tl;
+            document.getElementById('totalDinner').textContent = td;
+            document.getElementById('totalMeals').textContent = tm;
+            document.getElementById('totalBill').textContent = bill + ' TK';
+            document.getElementById('balancePaid').textContent = paid + ' TK';
+            document.getElementById('balanceBill').textContent = bill + ' TK';
+            
+            const balEl = document.getElementById('balanceDue');
+            balEl.querySelector('span:last-child').textContent = bal + ' TK';
+            balEl.className = 'balance-item ' + (bal > 0 ? 'positive' : bal < 0 ? 'negative' : '');
+        }
+
+        document.getElementById('paidAmount').oninput = (e) => {
+            yearData[`${currentMonth}`].paidAmount = parseFloat(e.target.value) || 0;
+            updateTotals();
+            saveData();
+        };
+
+        document.getElementById('monthSelect').onchange = (e) => {
+            currentMonth = parseInt(e.target.value);
+            generateTable(currentMonth);
+        };
+    </script>
+</body>
+</html>
